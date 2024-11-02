@@ -1,25 +1,17 @@
-import cv2
-import mediapipe as mp
+import pygame
 
-mp_drawing = mp.solutions.drawing_utils
-mp_hands = mp.solutions.hands
+pygame.init()
 
-capture = cv2.VideoCapture(1)
+screen = pygame.display.set_mode([800, 600])
 
-def count_fingers(hand_landmarks):
-    finger_count = 0
-    for idx, landmark in enumerate(hand_landmarks.landmark):
-        is_right_thumb_up = idx == 4 and landmark.x < hand_landmarks.landmark[3].x
-        is_left_thumb_up = idx == 4 and landmark.x > hand_landmarks.landmark[3].x
-        is_other_finger_up = idx in [8, 12, 16, 20] and landmark.y < hand_landmarks.landmark[idx - 1].y
+running = True
+while running:
+    screen.fill((0, 0, 0))
 
-        is_finger_up = is_right_thumb_up or is_left_thumb_up or is_other_finger_up
-        if is_finger_up:
-            finger_count += 1
-    return finger_count
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
 
-def hand_tracker(frame, results):
-    ...
+    pygame.display.update()
 
-
-    
+pygame.quit()
