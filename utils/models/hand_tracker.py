@@ -16,11 +16,11 @@ def count_fingers(hand_landmarks, handedness_str):
         is_finger_up = is_right_thumb_up or is_left_thumb_up or is_other_finger_up
         if is_finger_up:
             finger_count += 1
-    return finger_count
+    return finger_count, handedness_str
 
 with mp_hands.Hands(
     static_image_mode=False,
-    max_num_hands=1,
+    max_num_hands=2,
     min_detection_confidence=0.5
 ) as hands:
     while capture.isOpened():
@@ -48,7 +48,3 @@ with mp_hands.Hands(
 
 capture.release()
 cv2.destroyAllWindows()
-
-
-
-    
