@@ -3,7 +3,6 @@ import cv2
 from hand_tracker import HandTracker
 from generate_quiz import generate_quiz
 from objects.quiz import Quiz
-# from objects.bubble import Bubble
 
 WIDTH, HEIGHT = 1440, 966
 
@@ -14,7 +13,9 @@ screen = pygame.display.set_mode([WIDTH, HEIGHT])
 capture = cv2.VideoCapture(1)
 hand_tracker = HandTracker(capture)
 
-font = pygame.font.Font(None, 36)
+font = pygame.font.Font(None, 39)
+hand_font = pygame.font.Font(None, 42)
+
 running = True
 
 background_image = pygame.image.load("bg.jpg")
@@ -51,18 +52,11 @@ while running:
         frame_surface = pygame.surfarray.make_surface(cv2.transpose(frame)) 
         screen.blit(frame_surface, (0, 0))  
 
-    left_text = font.render(f"Left: {left_count}", True, (255, 255, 255))
-    right_text = font.render(f"Right: {right_count}", True, (255, 255, 255))
-
-    sign = quiz.get_sign() if quiz.get_sign() else "?"
-    answer = quiz.answer if quiz.answer else "?"
-    instructions = quiz.instructions if quiz.instructions else "?"
-
-    quiz_text = font.render(f"____ {sign} ____ = {answer}", True, (255, 255, 255))
+    left_text = hand_font.render(f"Left or X: {left_count}", True, (0, 255, 255))
+    right_text = hand_font.render(f"Right or Y: {right_count}", True, (0, 0, 255))
 
     screen.blit(left_text, (WIDTH - left_text.get_width() - 10, 10)) 
     screen.blit(right_text, (WIDTH - right_text.get_width() - 10, 40))  
-    screen.blit(quiz_text, (WIDTH - quiz_text.get_width() - 10, 70))
 
     # Bublles
     if current_time - message_change_timer > message_change_interval:
@@ -74,9 +68,10 @@ while running:
             index = 0
 
         quiz = Quiz(generated_quiz[index])
+        
         message_change_timer = current_time
 
-    text_surface = font.render(instructions, True, (0, 0, 0))
+    text_surface = font.render(quiz.instructions, True, (0, 0, 0))
     bubble_width = text_surface.get_width() + bubble_padding * 2
 
     bubble_surface = pygame.Surface((bubble_width, bubble_height))

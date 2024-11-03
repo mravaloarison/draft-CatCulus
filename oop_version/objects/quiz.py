@@ -15,6 +15,3 @@ class Quiz:
     
     def get_answer(self):
         return self.answer
-    
-    def get_sign(self):
-        return self.sign
