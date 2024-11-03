@@ -81,8 +81,3 @@ class Bublle:
 
         self.pygame.screen.blit(text_surface, (text_x, text_y))
         return self.pygame.screen
-    
-
-    
-
-    
