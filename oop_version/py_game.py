@@ -88,6 +88,8 @@ while running:
         bubble_height,
     )
 
+    # My comment test 
+    
     screen.blit(bubble_surface, bubble_rect.topleft)
     text_x = bubble_rect.x + bubble_padding
     text_y = bubble_rect.y + (bubble_height - text_surface.get_height()) // 2
