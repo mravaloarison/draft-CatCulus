@@ -11,7 +11,8 @@ def generate_quiz():
     # prompt = os.getenv("YOUR_PROMPT")
     prompt = """
     Generate 5 math-based quizzes that meet the following criteria:
-        - Each question should involve two unknown numbers, x and y, and can use addition, subtraction, multiplication, square, cube, or other mathematical operations.
+        - Each question should involve two unknown numbers, x and y, and use all addition, subtraction, multiplication, square, cube, or other mathematical operations.
+        - Don't Always use the same operation for each question.
         - Ensure x and y are always less than or equal to 5 in value.
         - The challenge should be for the user to guess x and y based on the given equation.
         - The instruction should not reveal that the numbers are less than 5.
@@ -39,4 +40,4 @@ def generate_quiz():
 
     return array_of_keywords
 
-# print(generate_quiz())
+print(generate_quiz())

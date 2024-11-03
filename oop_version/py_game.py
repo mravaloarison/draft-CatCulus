@@ -3,7 +3,8 @@ import cv2
 from hand_tracker import HandTracker
 from generate_quiz import generate_quiz
 from objects.quiz import Quiz
-import math, random
+import math
+import random
 
 WIDTH, HEIGHT = 1440, 966
 
@@ -20,10 +21,26 @@ hand_font = pygame.font.Font(None, 42)
 running = True
 
 background_image = pygame.image.load("bg.jpg")
-background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))  
+background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
+
+cat_sprite_sheet = pygame.image.load("assets/cat/Idle.png").convert_alpha()
 
 ghost_sprite_sheet = pygame.image.load("assets/ghost/Ghost_Idle.png").convert_alpha()
 ghost_death_sprite_sheet = pygame.image.load("assets/ghost/Ghost_Death.png").convert_alpha()
+
+# Define the cat sprite dimensions
+sprite_width, sprite_height = 48, 48  # Original frame size
+scale_factor = 4  # Scale factor to make the image bigger
+scaled_width = sprite_width * scale_factor
+scaled_height = sprite_height * scale_factor
+num_frames_cat = 4  # Total number of frames in the sprite sheet
+
+# Extract and scale each frame from the cat sprite sheet
+cat_frames = []
+for i in range(num_frames_cat):
+    frame = cat_sprite_sheet.subsurface((i * sprite_width, 0, sprite_width, sprite_height))
+    scaled_frame = pygame.transform.scale(frame, (scaled_width, scaled_height))
+    cat_frames.append(scaled_frame)
 
 # Define ghost sprite dimensions
 ghost_sprite_width, ghost_sprite_height = 48, 48  # Adjust based on actual frame size
@@ -40,7 +57,7 @@ for i in range(num_frames_ghost):
     ghost_frames.append(scaled_frame)
 
 # Define the dimensions for the death animation
-death_num_frames = 1
+death_num_frames = 5  # Adjust according to the number of frames in the death animation
 ghost_death_frames = []
 for i in range(death_num_frames):
     frame = ghost_death_sprite_sheet.subsurface((i * ghost_sprite_width, 0, ghost_sprite_width, ghost_sprite_height))
@@ -90,6 +107,7 @@ def generate_ghosts():
 # Initialize ghosts
 ghosts = generate_ghosts()
 
+# Adding additional fields to ghost dictionaries to track state
 ghost_speed = 2  # Speed of ghost movement
 ghost_stop_distance = 9  # Distance at which the ghost stops near the center
 
@@ -122,12 +140,6 @@ while running:
             if ghost["death_frame_index"] < len(ghost_death_frames):
                 screen.blit(ghost_death_frames[ghost["death_frame_index"]], (int(ghost_x), int(ghost_y)))
                 ghost["death_frame_index"] += 1
-            else:
-                # If death animation is complete, generate new quiz and new ghosts
-                generated_quiz = generate_quiz()
-                index = 0
-                quiz = Quiz(generated_quiz[index])
-                ghosts = generate_ghosts()  # Generate new ghosts
             continue
 
         # Calculate distance and move ghost toward target
@@ -137,8 +149,6 @@ while running:
             ghost["y"] += (target_y - ghost_y) / distance * ghost_speed
         else:
             ghost["is_dead"] = True
-            ghost["x"] = target_x  # Align the ghost perfectly to the center on death
-            ghost["y"] = target_y
 
         # Draw the current frame of the ghost's walking animation if not dead
         screen.blit(ghost_frames[int(frame_index_ghost)], (int(ghost["x"]), int(ghost["y"])))
@@ -148,7 +158,17 @@ while running:
             running = False
 
     frame = hand_tracker.track_hands()
-    left_count, right_count = hand_tracker.get_finger_count() 
+    left_count, right_count = hand_tracker.get_finger_count()
+
+    # Update the cat animation frame
+    frame_index_cat = (pygame.time.get_ticks() // 100) % num_frames_cat
+
+    # Calculate cat position
+    cat_x = WIDTH // 2 - scaled_width // 2
+    cat_y = HEIGHT // 2 - scaled_height // 2 - 100
+
+    # Draw the current frame of the cat
+    screen.blit(cat_frames[int(frame_index_cat)], (cat_x, cat_y))
 
     if frame is not None:
         frame_surface = pygame.surfarray.make_surface(cv2.transpose(frame)) 
@@ -162,11 +182,13 @@ while running:
 
     f = quiz.is_correct(left_count, right_count)
     if f:
-        # Check if quiz answer is correct and generate new quiz
         generated_quiz = generate_quiz()
         index = 0
         quiz = Quiz(generated_quiz[index])
         message_change_timer = current_time
+
+        # Generate new ghosts when a new quiz appears
+        ghosts = generate_ghosts()
 
     text_surface = font.render(quiz.instructions, True, (0, 0, 0))
     bubble_width = text_surface.get_width() + bubble_padding * 2
@@ -174,10 +196,11 @@ while running:
     bubble_surface = pygame.Surface((bubble_width, bubble_height))
     bubble_surface.fill((255, 255, 255))
     bubble_surface.set_alpha(230)
-    
+
+    # Position the bubble above the cat's head
     bubble_rect = pygame.Rect(
         (WIDTH - bubble_width) // 2,
-        (HEIGHT - bubble_height) // 2,
+        cat_y - bubble_height,  # Position above the cat
         bubble_width,
         bubble_height,
     )
@@ -193,3 +216,5 @@ while running:
 
 pygame.quit()
 capture.release()
+
+
