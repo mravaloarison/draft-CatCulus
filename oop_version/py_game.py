@@ -3,6 +3,7 @@ import cv2
 from hand_tracker import HandTracker
 from generate_quiz import generate_quiz
 from objects.quiz import Quiz
+# from objects.bubble import Bubble
 
 WIDTH, HEIGHT = 1440, 966
 
@@ -19,7 +20,7 @@ running = True
 background_image = pygame.image.load("bg.jpg")
 background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))  
 
-count = 10
+count = 5
 index = 0
 
 generated_quiz = generate_quiz() 
@@ -63,6 +64,7 @@ while running:
     screen.blit(right_text, (WIDTH - right_text.get_width() - 10, 40))  
     screen.blit(quiz_text, (WIDTH - quiz_text.get_width() - 10, 70))
 
+    # Bublles
     if current_time - message_change_timer > message_change_interval:
         if len(generated_quiz) > 1 and len(generated_quiz) < count:
             index = (index + 1) % len(generated_quiz)
@@ -88,12 +90,11 @@ while running:
         bubble_height,
     )
 
-    # My comment test 
-    
     screen.blit(bubble_surface, bubble_rect.topleft)
     text_x = bubble_rect.x + bubble_padding
     text_y = bubble_rect.y + (bubble_height - text_surface.get_height()) // 2
     screen.blit(text_surface, (text_x, text_y))
+    # End bubbles
 
     pygame.display.update()
     clock.tick(60)
