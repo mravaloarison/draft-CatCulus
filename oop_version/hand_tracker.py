@@ -18,20 +18,22 @@ class HandTracker:
             max_num_hands=2,
             min_detection_confidence=0.5
         )
-        self.finger_count = 0
-        self.handedness_str = "Right"
+        self.left_finger_count = 0
+        self.right_finger_count = 0
+        self.left_handedness_str = "Left"
+        self.right_handedness_str = "Right"
 
     def count_fingers(self, hand_landmarks, handedness_str):
         finger_count = 0
         for idx, landmark in enumerate(hand_landmarks.landmark):
-            is_right_thumb_up = idx == 4 and landmark.x < hand_landmarks.landmark[3].x and handedness_str == "Right"
-            is_left_thumb_up = idx == 4 and landmark.x > hand_landmarks.landmark[3].x and handedness_str == "Left"
+            is_thumb_up = (idx == 4 and
+                           ((handedness_str == "Right" and landmark.x < hand_landmarks.landmark[3].x) or
+                            (handedness_str == "Left" and landmark.x > hand_landmarks.landmark[3].x)))
             is_other_finger_up = idx in [8, 12, 16, 20] and landmark.y < hand_landmarks.landmark[idx - 1].y
 
-            is_finger_up = is_right_thumb_up or is_left_thumb_up or is_other_finger_up
-            if is_finger_up:
+            if is_thumb_up or is_other_finger_up:
                 finger_count += 1
-        return finger_count, handedness_str
+        return finger_count
 
     def track_hands(self):
         ret, frame = self.capture.read()
@@ -46,17 +48,27 @@ class HandTracker:
         frame.flags.writeable = True
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
+        self.left_finger_count = 0
+        self.right_finger_count = 0
+
         if results.multi_hand_landmarks:
-            for hand_landmarks in results.multi_hand_landmarks:
-                handedness_str = results.multi_handedness[0].classification[0].label
-                self.finger_count, self.handedness_str = self.count_fingers(hand_landmarks, handedness_str)
+            for i, hand_landmarks in enumerate(results.multi_hand_landmarks):
+                handedness_str = results.multi_handedness[i].classification[0].label
+                finger_count = self.count_fingers(hand_landmarks, handedness_str)
+
+                if handedness_str == "Right":
+                    self.right_finger_count = finger_count
+                elif handedness_str == "Left":
+                    self.left_finger_count = finger_count
+
                 mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  
         return frame  
 
     def get_finger_count(self):
-        return self.finger_count, self.handedness_str
+        return self.left_finger_count, self.right_finger_count
+
         
 # def count_fingers(hand_landmarks, handedness_str):
 #     finger_count = 0
