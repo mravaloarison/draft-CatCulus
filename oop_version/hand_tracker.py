@@ -13,6 +13,13 @@ WIDTH, HEIGHT = 341, 195
 class HandTracker:
     def __init__(self, capture):
         self.capture = capture
+        self.mp_hands = mp_hands.Hands(
+            static_image_mode=False,
+            max_num_hands=2,
+            min_detection_confidence=0.5
+        )
+        self.finger_count = 0
+        self.handedness_str = "Right"
 
     def count_fingers(self, hand_landmarks, handedness_str):
         finger_count = 0
@@ -27,39 +34,29 @@ class HandTracker:
         return finger_count, handedness_str
 
     def track_hands(self):
-        with mp_hands.Hands(
-            static_image_mode=False,
-            max_num_hands=2,
-            min_detection_confidence=0.5
-        ) as hands:
-            while self.capture.isOpened():
-                ret, frame = self.capture.read()
-                if not ret:
-                    print("Ignoring empty camera frame.")
-                    continue
+        ret, frame = self.capture.read()
+        if not ret:
+            print("Ignoring empty camera frame.")
+            return
 
-                frame = cv2.cvtColor(cv2.flip(frame, 1), cv2.COLOR_BGR2RGB)
-                frame = cv2.resize(frame, (WIDTH, HEIGHT))
-                frame.flags.writeable = False
-                results = hands.process(frame)
-                frame.flags.writeable = True
-                frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        frame = cv2.cvtColor(cv2.flip(frame, 1), cv2.COLOR_BGR2RGB)
+        frame = cv2.resize(frame, (WIDTH, HEIGHT))
+        frame.flags.writeable = False
+        results = self.mp_hands.process(frame)
+        frame.flags.writeable = True
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
-                if results.multi_hand_landmarks:
-                    for hand_landmarks in results.multi_hand_landmarks:
-                        handedness_str = results.multi_handedness[0].classification[0].label
-                        finger_count = self.count_fingers(hand_landmarks, handedness_str)
-                        print(finger_count)
-                        mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+        if results.multi_hand_landmarks:
+            for hand_landmarks in results.multi_hand_landmarks:
+                handedness_str = results.multi_handedness[0].classification[0].label
+                self.finger_count, self.handedness_str = self.count_fingers(hand_landmarks, handedness_str)
+                mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
-                cv2.imshow('MediaPipe Hands', frame)
-                if cv2.waitKey(5) & 0xFF == 27:
-                    break
-                
-        self.capture.release()  
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  
+        return frame  
 
     def get_finger_count(self):
-        return finger_count
+        return self.finger_count, self.handedness_str
         
 # def count_fingers(hand_landmarks, handedness_str):
 #     finger_count = 0
@@ -83,7 +80,6 @@ class HandTracker:
 #         if not ret:
 #             print("Ignoring empty camera frame.")
 #             continue
-
         
 #         frame = cv2.cvtColor(cv2.flip(frame, 1), cv2.COLOR_BGR2RGB)
 #         size = frame.shape
