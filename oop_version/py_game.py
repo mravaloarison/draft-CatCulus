@@ -3,7 +3,7 @@ import cv2
 from hand_tracker import HandTracker
 from generate_quiz import generate_quiz
 from objects.quiz import Quiz
-import math
+import math, random
 
 WIDTH, HEIGHT = 1440, 966
 
@@ -40,7 +40,7 @@ for i in range(num_frames_ghost):
     ghost_frames.append(scaled_frame)
 
 # Define the dimensions for the death animation
-death_num_frames = 5  # Adjust according to the number of frames in the death animation
+death_num_frames = 1
 ghost_death_frames = []
 for i in range(death_num_frames):
     frame = ghost_death_sprite_sheet.subsurface((i * ghost_sprite_width, 0, ghost_sprite_width, ghost_sprite_height))
@@ -49,10 +49,43 @@ for i in range(death_num_frames):
 
 # Function to generate ghosts
 def generate_ghosts():
-    return [
-        {"x": -ghost_scaled_width, "y": HEIGHT // 2, "target_x": WIDTH // 2 - ghost_scaled_width // 2, "target_y": HEIGHT // 2, "is_dead": False, "death_frame_index": 0},
-        {"x": WIDTH, "y": HEIGHT // 2, "target_x": WIDTH // 2 - ghost_scaled_width // 2, "target_y": HEIGHT // 2, "is_dead": False, "death_frame_index": 0}
-    ]
+    side = random.choice(["left", "right", "top", "bottom"])
+    if side == "left":
+        return [
+            {"x": -ghost_scaled_width, "y": random.randint(0, HEIGHT - ghost_scaled_height),
+             "target_x": WIDTH // 2 - ghost_scaled_width // 2,
+             "target_y": HEIGHT // 2 - ghost_scaled_height // 2, "is_dead": False, "death_frame_index": 0},
+            {"x": -ghost_scaled_width, "y": random.randint(0, HEIGHT - ghost_scaled_height),
+             "target_x": WIDTH // 2 - ghost_scaled_width // 2,
+             "target_y": HEIGHT // 2 - ghost_scaled_height // 2, "is_dead": False, "death_frame_index": 0}
+        ]
+    elif side == "right":
+        return [
+            {"x": WIDTH, "y": random.randint(0, HEIGHT - ghost_scaled_height),
+             "target_x": WIDTH // 2 - ghost_scaled_width // 2,
+             "target_y": HEIGHT // 2 - ghost_scaled_height // 2, "is_dead": False, "death_frame_index": 0},
+            {"x": WIDTH, "y": random.randint(0, HEIGHT - ghost_scaled_height),
+             "target_x": WIDTH // 2 - ghost_scaled_width // 2,
+             "target_y": HEIGHT // 2 - ghost_scaled_height // 2, "is_dead": False, "death_frame_index": 0}
+        ]
+    elif side == "top":
+        return [
+            {"x": random.randint(0, WIDTH - ghost_scaled_width), "y": -ghost_scaled_height,
+             "target_x": WIDTH // 2 - ghost_scaled_width // 2,
+             "target_y": HEIGHT // 2 - ghost_scaled_height // 2, "is_dead": False, "death_frame_index": 0},
+            {"x": random.randint(0, WIDTH - ghost_scaled_width), "y": -ghost_scaled_height,
+             "target_x": WIDTH // 2 - ghost_scaled_width // 2,
+             "target_y": HEIGHT // 2 - ghost_scaled_height // 2, "is_dead": False, "death_frame_index": 0}
+        ]
+    else:  # bottom
+        return [
+            {"x": random.randint(0, WIDTH - ghost_scaled_width), "y": HEIGHT,
+             "target_x": WIDTH // 2 - ghost_scaled_width // 2,
+             "target_y": HEIGHT // 2 - ghost_scaled_height // 2, "is_dead": False, "death_frame_index": 0},
+            {"x": random.randint(0, WIDTH - ghost_scaled_width), "y": HEIGHT,
+             "target_x": WIDTH // 2 - ghost_scaled_width // 2,
+             "target_y": HEIGHT // 2 - ghost_scaled_height // 2, "is_dead": False, "death_frame_index": 0}
+        ]
 
 # Initialize ghosts
 ghosts = generate_ghosts()
@@ -89,6 +122,12 @@ while running:
             if ghost["death_frame_index"] < len(ghost_death_frames):
                 screen.blit(ghost_death_frames[ghost["death_frame_index"]], (int(ghost_x), int(ghost_y)))
                 ghost["death_frame_index"] += 1
+            else:
+                # If death animation is complete, generate new quiz and new ghosts
+                generated_quiz = generate_quiz()
+                index = 0
+                quiz = Quiz(generated_quiz[index])
+                ghosts = generate_ghosts()  # Generate new ghosts
             continue
 
         # Calculate distance and move ghost toward target
@@ -123,13 +162,11 @@ while running:
 
     f = quiz.is_correct(left_count, right_count)
     if f:
+        # Check if quiz answer is correct and generate new quiz
         generated_quiz = generate_quiz()
         index = 0
         quiz = Quiz(generated_quiz[index])
         message_change_timer = current_time
-
-        # Generate new ghosts when a new quiz appears
-        ghosts = generate_ghosts()
 
     text_surface = font.render(quiz.instructions, True, (0, 0, 0))
     bubble_width = text_surface.get_width() + bubble_padding * 2
