@@ -58,18 +58,14 @@ while running:
     screen.blit(left_text, (WIDTH - left_text.get_width() - 10, 10)) 
     screen.blit(right_text, (WIDTH - right_text.get_width() - 10, 40))  
 
-    # Bublles
-    if current_time - message_change_timer > message_change_interval:
-        if len(generated_quiz) > 1 and len(generated_quiz) < count:
-            index = (index + 1) % len(generated_quiz)
-
-        else:
-            generated_quiz = generate_quiz()
-            index = 0
-
+    f = quiz.is_correct(left_count, right_count)
+    if f:
+        generated_quiz = generate_quiz()
+        index = 0
         quiz = Quiz(generated_quiz[index])
-        
         message_change_timer = current_time
+        # TODO: 
+        # Ghost Dies and Generate new quiz
 
     text_surface = font.render(quiz.instructions, True, (0, 0, 0))
     bubble_width = text_surface.get_width() + bubble_padding * 2
