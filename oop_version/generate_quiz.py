@@ -40,4 +40,11 @@ def generate_quiz():
 
     return array_of_keywords
 
-print(generate_quiz())
+# def test():
+#     prompt =" say hi"
+#     response = regular_model.generate_content(prompt)
+#     print(response.text)
+#     return response.text
+
+# print(generate_quiz())
+# test()
